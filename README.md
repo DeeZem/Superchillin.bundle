@@ -1,7 +1,7 @@
 About 
 =====
 
-Superchillin chnnael for Plex Media Server
+Superchillin channel for Plex Media Server
 
 System Requirements
 ===================
@@ -22,6 +22,8 @@ How To Install
 	- Mac/Linux: ~/Library/Application Support/Plex Media Server/Plug-ins
 
 - Restart PMS
+
+- In the Plex Web UI, open the settings for the channel (hover over the channel and click the gear icon) and enter your login information.
 
 Known Issues
 ============
