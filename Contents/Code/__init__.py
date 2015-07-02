@@ -97,8 +97,15 @@ def Movies(url=None, title='Movies', showSearch=True):
 		return oc
 
 	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
-	title = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/text()')
-	fileId = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/@id')
+
+# HTML was changed. Had to modify xpath query to compensate
+	#title = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/text()')
+	#fileId = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/@id')
+	title = req.xpath('//a[@class=\'tippable\']/text()')
+	fileId = req.xpath('//a[@class=\'tippable\']/@id')
+	if len(fileId) == 0:
+		title = req.xpath('//a[@style=\'color:#fff\']/text()')
+		fileId = req.xpath('//a[@style=\'color:#fff\']/@id')
 
 	for i in range(len(fileId)):
 		# .decode() removes any incompatible characters
@@ -106,7 +113,7 @@ def Movies(url=None, title='Movies', showSearch=True):
 		thisfileId = fileId[i]
 		oc.add(DirectoryObject(
 			key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
-			#thumb = THUMB % thisfileId,
+			thumb = THUMB % thisfileId,
 			title = thisTitle
 		))
 	return oc
@@ -139,7 +146,7 @@ def TV(url=None, title='Series', showSearch=True):
 		thisshowId = showId[i].split('?')[1]
 		oc.add(DirectoryObject(
 			key=Callback(TVSeries, title=thisTitle, showId=thisshowId),
-			#thumb = THUMB % ('sh'+thisshowId),
+			thumb = THUMB % ('sh'+thisshowId),
 			title = thisTitle
 		))
 	return oc
@@ -163,7 +170,7 @@ def KidsZone():
 		thisfileId = fileId[i].split('?')[1]
 		oc.add(DirectoryObject(
 			key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
-			#thumb = THUMB % thisfileId,
+			thumb = THUMB % thisfileId,
 			title = thisTitle
 		))
 	return oc
@@ -186,7 +193,7 @@ def TVSeries(title, showId):
 		epFileId = episode.xpath('./a/@href')[0].split('?')[1].split('&')[0]
 		oc.add(DirectoryObject(
 			key=Callback(VideoDetail, title=epTitle, fileId=epFileId, tv=1),
-			#thumb = THUMB % ('ep'+epFileId),
+			thumb = THUMB % ('ep'+epFileId),
 			title = (epNum + epTitle)
 		))
 	return oc

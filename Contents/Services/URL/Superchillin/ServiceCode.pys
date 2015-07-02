@@ -56,7 +56,7 @@ def MediaObjectsForURL(url):
 	return [MediaObject(
 		video_codec = VideoCodec.H264,
 		audio_codec = AudioCodec.AAC,
-		container = Container.MP4 if url.split('type=')[1].split('&')[0] == 'mp4' else 'flv',
+		container = Container.MP4 if url.split('type=')[1].split('&')[0] == 'mp4' else '',
 		video_resolution = '720' if url.split('hd=')[1].split('&')[0] == '0' else '1080',
 		audio_channels = 2,
 		optimized_for_streaming = True,
