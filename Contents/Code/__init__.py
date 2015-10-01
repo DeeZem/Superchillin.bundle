@@ -13,7 +13,7 @@ DOMAIN = 'superchillin.com'
 MAIN = 'http://' + DOMAIN + '/'
 LOGIN = MAIN + "login.php"
 LOGIN2 = MAIN + "login2.php"
-THUMB = "http://107.6.170.83/~nooboard/2img/%s.jpg"
+THUMB = "http://199.255.139.34/~breakfas/2img/%s.jpg"
 MOVIESLATEST = MAIN + "latest.php"
 MOVIESAZ = MAIN + "azlist.php"
 MOVIESYEAR = MAIN + "year.php"
@@ -71,6 +71,7 @@ def Start():
 @handler(PREFIX, TITLE)
 def MainMenu():
 
+	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
 	if not PREMIUM: return MediaContainer(no_cache=True, message="Premium account required.")
 
