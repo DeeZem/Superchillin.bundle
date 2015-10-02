@@ -3,7 +3,7 @@ DOMAIN = 'superchillin.com'
 BASE_URL = 'http://'+DOMAIN+'/'
 NORMAL = BASE_URL + 'fork.php?'
 METADATA_URL = BASE_URL + '?%s&tv=%s'
-THUMB = 'http://199.255.139.34/~breakfas/2img/%s.jpg'
+THUMB = 'http://superchillin.com/2img/%s.jpg'
 
 def MetadataObjectForURL(url):
 	identifier = url.split('file=')[1].split('&')[0]
