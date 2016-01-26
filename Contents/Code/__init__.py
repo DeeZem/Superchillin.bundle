@@ -118,7 +118,7 @@ def Movies(url=None, title='Movies', showSearch=True, letter=None):
 		# .decode() removes any incompatible characters
 		thisTitle = title[i].decode('utf-8','ignore')
 		thisfileId = fileId[i]
-		if thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
+		if letter == None or thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
 			oc.add(DirectoryObject(
 				key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
 				thumb = THUMB % thisfileId,
