@@ -73,7 +73,7 @@ def MainMenu():
 
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
-	if not PREMIUM: return MediaContainer(no_cache=True, message="Premium account required.")
+	#if not PREMIUM: return MediaContainer(no_cache=True, message="Premium account required.")
 
 	oc = ObjectContainer()
 	oc.add(DirectoryObject(key=Callback(Movies), title="Movies"))
@@ -83,7 +83,7 @@ def MainMenu():
 
 # ####################################################################################################
 @route(PREFIX + '/movies')
-def Movies(url=None, title='Movies', showSearch=True):
+def Movies(url=None, title='Movies', showSearch=True, letter=None):
 	oc = ObjectContainer(title1=title)
 	
 	if showSearch:
@@ -95,6 +95,12 @@ def Movies(url=None, title='Movies', showSearch=True):
 		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESYEAR), title="Order by Release Date"))
 		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESRATING), title="Order by IMDb Rating"))
 		oc.add(DirectoryObject(key=Callback(Movies, url=QUERY % 'High+Bitrate+Test'), title="High Bitrate Test"))
+		return oc
+
+	if url == MOVIESAZ and not letter:
+		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESAZ, letter='#'), title="#"))
+		for i in map(chr, range(65, 91)):
+			oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESAZ, letter=i), title=i))
 		return oc
 
 	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
@@ -112,11 +118,12 @@ def Movies(url=None, title='Movies', showSearch=True):
 		# .decode() removes any incompatible characters
 		thisTitle = title[i].decode('utf-8','ignore')
 		thisfileId = fileId[i]
-		oc.add(DirectoryObject(
-			key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
-			thumb = THUMB % thisfileId,
-			title = thisTitle
-		))
+		if thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
+			oc.add(DirectoryObject(
+				key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
+				thumb = THUMB % thisfileId,
+				title = thisTitle
+			))
 	return oc
 
 # ####################################################################################################
