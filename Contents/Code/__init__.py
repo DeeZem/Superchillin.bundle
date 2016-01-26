@@ -73,7 +73,7 @@ def MainMenu():
 
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
-	#if not PREMIUM: return MediaContainer(no_cache=True, message="Premium account required.")
+	if not PREMIUM: return MediaContainer(no_cache=True, message="Premium account required.")
 
 	oc = ObjectContainer()
 	oc.add(DirectoryObject(key=Callback(Movies), title="Movies"))
