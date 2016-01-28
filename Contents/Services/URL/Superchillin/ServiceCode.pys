@@ -31,7 +31,7 @@ def MetadataObjectForURL(url):
 	description =    page.xpath("//meta[@property='og:description']//@content")
 	description =      description[0] if description else ''
 	rating =         page.xpath("//div[@class='titlePageSprite star-box-giga-star']//text()")
-	rating =           float(rating[0]) if rating else 0
+	rating =           float(rating[0]) if rating else float(0)
 	content_rating = page.xpath("//meta[@itemprop='contentRating']//@content")
 	content_rating =   content_rating[0] if content_rating else 'NR'
 	
