@@ -132,7 +132,7 @@ def SearchMovies(query):
 
 # ####################################################################################################
 @route(PREFIX + '/tv')
-def TV(url=None, title='Series', showSearch=True):
+def TV(url=None, title='Series', showSearch=True, letter=None):
 	oc = ObjectContainer(title1=title)
 	
 	if showSearch:
@@ -144,6 +144,12 @@ def TV(url=None, title='Series', showSearch=True):
 		oc.add(DirectoryObject(key=Callback(TV, url=TVSHOWS), title="Regular Listing"))
 		return oc
 
+	if url == TVSHOWSALPHA and not letter:
+		oc.add(DirectoryObject(key=Callback(TV, url=TVSHOWSALPHA, letter='#'), title="#"))
+		for i in map(chr, range(65, 91)):
+			oc.add(DirectoryObject(key=Callback(TV, url=TVSHOWSALPHA, letter=i), title=i))
+		return oc
+
 	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
 	title = req.xpath('//a[@style=\'color:#fff\']/text()') if showSearch else req.xpath('//a[@style=\'text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;\']/text()')
 	showId = req.xpath('//a[@style=\'color:#fff\']/@href') if showSearch else req.xpath('//a[@style=\'text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;\']/@href')
@@ -152,11 +158,12 @@ def TV(url=None, title='Series', showSearch=True):
 		# .decode() removes any incompatible characters
 		thisTitle = title[i].decode('utf-8','ignore')
 		thisshowId = showId[i].split('?')[1]
-		oc.add(DirectoryObject(
-			key=Callback(TVSeries, title=thisTitle, showId=thisshowId),
-			thumb = THUMB % ('sh'+thisshowId),
-			title = thisTitle
-		))
+		if letter == None or thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
+			oc.add(DirectoryObject(
+				key=Callback(TVSeries, title=thisTitle, showId=thisshowId),
+				thumb = THUMB % ('sh'+thisshowId),
+				title = thisTitle
+			))
 	return oc
 
 # ####################################################################################################
