@@ -26,30 +26,34 @@ def MetadataObjectForURL(url):
 
 	# IMDb request
 	page =           HTML.ElementFromURL(imdb)
-	title =          page.xpath("//h1[@class='header']//span[@class='itemprop']//text()")
+	title =          page.xpath("//h1[@class='header']//span[@itemprop='name']//text()|//h1[@itemprop='name']//text()")
 	title =            title[0] if title else ''
-	description =    page.xpath("//meta[@property='og:description']//@content")
+	year =           page.xpath("//h1[@class='header']//span[@class='nobr']//a//text()|//span[@id='titleYear']//a//text()")
+	year =             int(year[0]) if year else 0
+	tagline =        page.xpath("//div//h4[text()='Taglines:']//..//text()")
+	tagline =          tagline[2] if tagline else ''
+	description =    page.xpath("//p[@itemprop='description']//text()|//div[@itemprop='description']//text()")
 	description =      description[0] if description else ''
-	rating =         page.xpath("//div[@class='titlePageSprite star-box-giga-star']//text()")
+	rating =         page.xpath("//span[@itemprop='ratingValue']//text()")
 	rating =           float(rating[0]) if rating else float(0)
 	content_rating = page.xpath("//meta[@itemprop='contentRating']//@content")
 	content_rating =   content_rating[0] if content_rating else 'NR'
 	
-	writers =        page.xpath("//div[@itemprop='creator']//a//text()")
-	directors =      page.xpath("//div[@itemprop='director']//a//text()")
-	tags =           page.xpath("//div[@itemprop='keywords']//a//span//text()")
+	directors =      page.xpath("//div[@itemprop='director']//a//span//text()|//span[@itemprop='director']//a//span//text()")
+	writers =        page.xpath("//div[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()|//span[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()")
 	genres =         page.xpath("//span[@itemprop='genre']//text()")
 	thumb =          THUMB % (('ep'+identifier) if tv == '1' else identifier)
 
 	return VideoClipObject(
 		title = title,
+		tagline = tagline,
 		summary = description,
+		year = year,
 		genres = genres,
 		rating = rating,
 		content_rating = content_rating,
 		writers = writers,
 		directors = directors,
-		tags = tags,
 		thumb = thumb)
 
 def MediaObjectsForURL(url):
