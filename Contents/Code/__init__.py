@@ -34,14 +34,17 @@ SERVERS = {
 	"Amsterdam (Premium)":          '18',
 	"Copenhagen (Premium)":         '20',
 	"Frankfurt (Premium)":          '30',
+	"Paris (Premium)":		'36',
 	"New York City (Premium)":      '38',
 	"Washington D.C. (Premium)":    '42',
 	"Chicago (Premium)":            '46',
+	"Seattle (Premium)":		'50',
 	"Dallas (Premium)":             '52',
 	"Los Angeles (Premium)":        '62',
 	"San Jose (Premium)":           '65',
 	"Miami (Premium)":              '72',
 	"Toronto (Premium)":            '76',
+	"Montreal (Premium)":		'78',
 	"Sydney (Premium)":             '80'
 }
 
