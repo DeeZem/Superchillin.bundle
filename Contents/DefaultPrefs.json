@@ -25,14 +25,17 @@
             "Amsterdam (Premium)",
             "Copenhagen (Premium)",
             "Frankfurt (Premium)",
+            "Paris (Premium)",
             "New York City (Premium)",
             "Washington D.C. (Premium)",
             "Chicago (Premium)",
+            "Seattle (Premium)",
             "Dallas (Premium)",
             "Los Angeles (Premium)",
             "San Jose (Premium)",
             "Miami (Premium)",
             "Toronto (Premium)",
+            "Montreal (Premium)",
             "Sydney (Premium)"
         ],
         "default": "Dallas (Free)"
