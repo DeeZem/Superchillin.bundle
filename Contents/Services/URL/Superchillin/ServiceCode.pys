@@ -39,8 +39,8 @@ def MetadataObjectForURL(url):
 	content_rating = page.xpath("//meta[@itemprop='contentRating']//@content")
 	content_rating =   content_rating[0] if content_rating else 'NR'
 	
-	directors =      page.xpath("//div[@itemprop='director']//a//span//text()|//span[@itemprop='director']//a//span//text()")
-	writers =        page.xpath("//div[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()|//span[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()")
+	#directors =      page.xpath("//div[@itemprop='director']//a//span//text()|//span[@itemprop='director']//a//span//text()")
+	#writers =        page.xpath("//div[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()|//span[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()")
 	genres =         page.xpath("//span[@itemprop='genre']//text()")
 	thumb =          THUMB % (('ep'+identifier) if tv == '1' else identifier)
 
@@ -52,8 +52,8 @@ def MetadataObjectForURL(url):
 		genres = genres,
 		rating = rating,
 		content_rating = content_rating,
-		writers = writers,
-		directors = directors,
+		#writers = writers,
+		#directors = directors,
 		thumb = thumb)
 
 def MediaObjectsForURL(url):
