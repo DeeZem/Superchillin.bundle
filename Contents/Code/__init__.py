@@ -61,7 +61,11 @@ def Start():
 		checksum = Dict['checksum']
 		
 	# if the login info has not been changed, load the previous cookie
-	if checksum == hashlib.md5(Prefs["email"]+Prefs["password"]).hexdigest() and 'cookie' in Dict:
+	if Prefs['usecookie'] and checksum == hashlib.md5(Prefs["auth"]+Prefs["noob"]).hexdigest():
+		Log.Debug('Manual cookie has not changed not changed.')
+		COOKIE = Dict['cookie']
+		Log.Debug('Cookie loaded from last session.')
+	if not Prefs['usecookie'] and checksum == hashlib.md5(Prefs["email"]+Prefs["password"]).hexdigest() and 'cookie' in Dict:
 		Log.Debug('Login info has not changed.')
 		COOKIE = Dict['cookie']
 		Log.Debug('Cookie loaded from last session.')
@@ -312,7 +316,10 @@ def Login():
 		# save cookie
 		COOKIE = HTTP.CookiesForURL(MAIN)
 		Dict['cookie'] = COOKIE
-		Dict['checksum'] = hashlib.md5(Prefs["email"]+Prefs["password"]).hexdigest()
+		if Prefs['usecookie']:
+			Dict['checksum'] = hashlib.md5(Prefs["auth"]+Prefs["noob"]).hexdigest()
+		else:
+			Dict['checksum'] = hashlib.md5(Prefs["email"]+Prefs["password"]).hexdigest()
 		# retrieve the auth code
 		script = page.xpath("//div[@style='position:relative']//script[@type='text/javascript']//text()")[0]
 		AUTHCODE = script.split('auth=')[1].split('&')[0]
