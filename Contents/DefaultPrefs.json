@@ -14,6 +14,28 @@
         "secure": "true"
     },
     {
+        "id": "usecookie",
+        "label": "Use auth/noob instead of username/password",
+        "type": "bool",
+        "default": "True"
+    },
+    {
+        "id": "auth",
+        "type": "text",
+        "label": "auth",
+        "default": "",
+        "option": "hidden",
+        "secure": "true"
+    },
+    {
+        "id": "noob",
+        "type": "text",
+        "label": "noob",
+        "default": "",
+        "option": "hidden",
+        "secure": "true"
+    },
+    {
         "id": "server",
         "type": "enum",
         "label": "Server",
