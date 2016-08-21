@@ -267,8 +267,11 @@ def Login():
 	logged_in = False
 	page = None
 	
-	if not Prefs['email'] or not Prefs['password']:
-		return False # we can't login if we don't have credentials
+	if Prefs['usecookie']:
+		COOKIE = "auth="+Prefs['auth']+"; noob="+Prefs['noob']
+	else:
+		if not Prefs['email'] or not Prefs['password']:
+			return False # we can't login if we don't have credentials
 
 	if COOKIE: # if we've already logged in
 		try: # make sure we are still logged in
