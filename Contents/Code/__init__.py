@@ -113,8 +113,6 @@ def Movies(url=None, title='Movies', showSearch=True, letter=None):
 	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
 
 # HTML was changed. Had to modify xpath query to compensate
-	#title = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/text()')
-	#fileId = req.xpath('//a[@style=\'text-decoration:underline;color:#fff;font-family: verdana,geneva,sans-serif;\']/@id')
 	title = req.xpath('//a[@class=\'tippable\']/text()')
 	fileId = req.xpath('//a[@class=\'tippable\']/@id')
 	if len(fileId) == 0:
@@ -191,7 +189,7 @@ def KidsZone():
 def KidsZoneMovies():
 	oc = ObjectContainer(title1='Movies')
 
-	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 0,headers = Header(referer=MAIN)).content)
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 300,headers = Header(referer=MAIN)).content)
 	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/text()')
 	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/@href')
 
@@ -211,7 +209,7 @@ def KidsZoneMovies():
 def KidsZoneTV():
 	oc = ObjectContainer(title1='TV')
 
-	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 0,headers = Header(referer=MAIN)).content)
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 300,headers = Header(referer=MAIN)).content)
 	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/text()')
 	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/@href')
 
@@ -284,7 +282,6 @@ def Header(referer=None, host=DOMAIN):
 def GetCookie(name):
 	if not COOKIE:
 		return None
-	#Log.Debug('Cookie: '+COOKIE)
 	cookies = COOKIE.split("; ")
 	for cookie in cookies:
 		key, val = cookie.split("=")
