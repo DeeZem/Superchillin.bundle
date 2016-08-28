@@ -180,11 +180,20 @@ def SearchTV(query):
 # ####################################################################################################
 @route(PREFIX + '/kids')
 def KidsZone():
-	oc = ObjectContainer(title1='Kids Zone')
 
-	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 300,headers = Header(referer=MAIN)).content)
-	title = req.xpath('//a[@style=\'color:#fff\']/text()')
-	fileId = req.xpath('//a[@style=\'color:#fff\']/@href')
+	oc = ObjectContainer(title1='Kids Zone')
+	oc.add(DirectoryObject(key=Callback(KidsZoneMovies), title="Movies"))
+	oc.add(DirectoryObject(key=Callback(KidsZoneTV), title="TV"))
+	return oc
+
+# ####################################################################################################
+@route(PREFIX + '/kidsmovies')
+def KidsZoneMovies():
+	oc = ObjectContainer(title1='Movies')
+
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 0,headers = Header(referer=MAIN)).content)
+	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/text()')
+	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/@href')
 
 	for i in range(len(fileId)):
 		# .decode() removes any incompatible characters
@@ -193,6 +202,26 @@ def KidsZone():
 		oc.add(DirectoryObject(
 			key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
 			thumb = THUMB % thisfileId,
+			title = thisTitle
+		))
+	return oc
+
+# ####################################################################################################
+@route(PREFIX + '/kidstv')
+def KidsZoneTV():
+	oc = ObjectContainer(title1='TV')
+
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 0,headers = Header(referer=MAIN)).content)
+	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/text()')
+	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/@href')
+
+	for i in range(len(fileId)):
+		# .decode() removes any incompatible characters
+		thisTitle = title[i].decode('utf-8','ignore')
+		thisfileId = fileId[i].split('?')[1]
+		oc.add(DirectoryObject(
+			key=Callback(TVSeries, title=thisTitle, showId=thisfileId),
+			thumb = THUMB % ('sh'+thisfileId),
 			title = thisTitle
 		))
 	return oc
@@ -255,6 +284,7 @@ def Header(referer=None, host=DOMAIN):
 def GetCookie(name):
 	if not COOKIE:
 		return None
+	#Log.Debug('Cookie: '+COOKIE)
 	cookies = COOKIE.split("; ")
 	for cookie in cookies:
 		key, val = cookie.split("=")
@@ -314,7 +344,8 @@ def Login():
 	# if we logged in successfully...
 	if logged_in:
 		# save cookie
-		COOKIE = HTTP.CookiesForURL(MAIN)
+		if not Prefs['usecookie']:
+			COOKIE = HTTP.CookiesForURL(MAIN)
 		Dict['cookie'] = COOKIE
 		if Prefs['usecookie']:
 			Dict['checksum'] = hashlib.md5(Prefs["auth"]+Prefs["noob"]).hexdigest()
