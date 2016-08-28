@@ -20,29 +20,61 @@ def MetadataObjectForURL(url):
 		"If-Modified-Since": "*"
 	}
 
-	# Superchillin request
-	page =          HTML.ElementFromURL(METADATA_URL % (identifier, tv), headers = header)
-	imdb =          page.xpath("//a[@title='The Internet Movie Database']//@href")[0]
+	try:
+		# Superchillin request
+		page =           HTML.ElementFromURL(METADATA_URL % (identifier, tv), headers = header)
+		imdb =           page.xpath("//a[@title='The Internet Movie Database']//@href")[0]
+		# IMDb request
+		page =           HTML.ElementFromURL(imdb)
+	except:
+		return VideoClipObject(title = '')
 
-	# IMDb request
-	page =           HTML.ElementFromURL(imdb)
-	title =          page.xpath("//h1[@class='header']//span[@itemprop='name']//text()|//h1[@itemprop='name']//text()")
-	title =            title[0] if title else ''
-	year =           page.xpath("//h1[@class='header']//span[@class='nobr']//a//text()|//span[@id='titleYear']//a//text()")
-	year =             int(year[0]) if year else 0
-	tagline =        page.xpath("//div//h4[text()='Taglines:']//..//text()")
-	tagline =          tagline[2] if tagline else ''
-	description =    page.xpath("//p[@itemprop='description']//text()|//div[@itemprop='description']//text()")
-	description =      description[0] if description else ''
-	rating =         page.xpath("//span[@itemprop='ratingValue']//text()")
-	rating =           float(rating[0]) if rating else float(0)
-	content_rating = page.xpath("//meta[@itemprop='contentRating']//@content")
-	content_rating =   content_rating[0] if content_rating else 'NR'
-	
-	#directors =      page.xpath("//div[@itemprop='director']//a//span//text()|//span[@itemprop='director']//a//span//text()")
-	#writers =        page.xpath("//div[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()|//span[@itemprop='creator'][@itemtype='http://schema.org/Person']//a//span//text()")
-	genres =         page.xpath("//span[@itemprop='genre']//text()")
-	thumb =          THUMB % (('ep'+identifier) if tv == '1' else identifier)
+	try:
+		title =          page.xpath("//h1[@class='header']//span[@itemprop='name']//text()|//h1[@itemprop='name']//text()")
+		title =            title[0] if title else ''
+	except:
+		title = ''
+
+	try:
+		year =           page.xpath("//h1[@class='header']//span[@class='nobr']//a//text()|//span[@id='titleYear']//a//text()")
+		year =             int(year[0]) if year else 0
+	except:
+		year = 0
+
+	try:
+		tagline =        page.xpath("//div//h4[text()='Taglines:']//..//text()")
+		tagline =          tagline[2] if tagline else ''
+	except:
+		tagline = ''
+
+
+	try:
+		description =    page.xpath("//p[@itemprop='description']//text()|//div[@itemprop='description']//text()")
+		description =      description[0] if description else ''
+	except:
+		description = ''
+
+	try:
+		rating =         page.xpath("//span[@itemprop='ratingValue']//text()")
+		rating =           float(rating[0]) if rating else float(0)
+	except:
+		rating = float(0)
+
+	try:
+		content_rating = page.xpath("//meta[@itemprop='contentRating']//@content")
+		content_rating =   content_rating[0] if content_rating else 'NR'
+	except:
+		content_rating = ''
+
+	try:
+		genres =         page.xpath("//span[@itemprop='genre']//text()")
+	except:
+		genres = []
+
+	try:
+		thumb =          THUMB % (('ep'+identifier) if tv == '1' else identifier)
+	except:
+		thumb = ''
 
 	return VideoClipObject(
 		title = title,
@@ -52,8 +84,6 @@ def MetadataObjectForURL(url):
 		genres = genres,
 		rating = rating,
 		content_rating = content_rating,
-		#writers = writers,
-		#directors = directors,
 		thumb = thumb)
 
 def MediaObjectsForURL(url):
