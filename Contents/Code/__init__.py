@@ -8,6 +8,8 @@ PREFIX = "/video/superchillin"
 
 ART = "art-default.jpg"
 ICON = "icon-default.png"
+ICON_NEXT = "icon-next.png"
+ICON_PREV = "icon-prev.png"
 
 DOMAIN = 'superchillin.com'
 MAIN = 'http://' + DOMAIN + '/'
@@ -25,6 +27,9 @@ TVSHOWS = MAIN + "series.php"
 TVSHOWSALPHA = TVSHOWS + "?dl=1"
 TVSHOWSLATEST = TVSHOWS + "?bl=1"
 TVSERIES = MAIN + "episodes.php?%s"
+
+PAGESIZE = 200
+CACHETIME = 300
 
 SERVERS = {
 	"Dallas (Free)":                '22',
@@ -55,7 +60,7 @@ PREMIUM = False
 # ####################################################################################################
 def Start():
 	global COOKIE
-	
+
 	checksum = None
 	if 'checksum' in Dict:
 		checksum = Dict['checksum']
@@ -77,6 +82,9 @@ def Start():
 # ####################################################################################################
 @handler(PREFIX, TITLE)
 def MainMenu():
+	global PAGESIZE
+
+	PAGESIZE = int(Prefs['pages'])
 
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
 	if not Login(): return MediaContainer(no_cache=True, message="Login Failed.")
@@ -90,7 +98,7 @@ def MainMenu():
 
 # ####################################################################################################
 @route(PREFIX + '/movies')
-def Movies(url=None, title='Movies', showSearch=True, letter=None):
+def Movies(url=None, title='Movies', showSearch=True, letter=None, page=1):
 	oc = ObjectContainer(title1=title)
 	
 	if showSearch:
@@ -101,7 +109,7 @@ def Movies(url=None, title='Movies', showSearch=True, letter=None):
 		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESAZ), title="Order by A-Z"))
 		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESYEAR), title="Order by Release Date"))
 		oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESRATING), title="Order by IMDb Rating"))
-		oc.add(DirectoryObject(key=Callback(Movies, url=QUERY % 'High+Bitrate+Test'), title="High Bitrate Test"))
+		oc.add(DirectoryObject(key=Callback(Movies, url=QUERY % 'High+Bitrate'), title="High Bitrate"))
 		return oc
 
 	if url == MOVIESAZ and not letter:
@@ -110,25 +118,33 @@ def Movies(url=None, title='Movies', showSearch=True, letter=None):
 			oc.add(DirectoryObject(key=Callback(Movies, url=MOVIESAZ, letter=i), title=i))
 		return oc
 
-	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
+	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = CACHETIME,headers = Header(referer=MAIN)).content)
 
-# HTML was changed. Had to modify xpath query to compensate
-	title = req.xpath('//a[@class=\'tippable\']/text()')
-	fileId = req.xpath('//a[@class=\'tippable\']/@id')
-	if len(fileId) == 0:
-		title = req.xpath('//a[@style=\'color:#fff\']/text()')
-		fileId = req.xpath('//a[@style=\'color:#fff\']/@id')
+	if not letter:
+		title = req.xpath("//a[@class='tippable']/text()|//a[@style='color:#fff']/text()")
+		fileId = req.xpath("//a[@class='tippable']/@id|//a[@style='color:#fff']/@id")
+	elif letter != '#':
+		title = req.xpath("//a[@class='tippable' and starts-with(text(),'"+letter+"')]/text()")
+		fileId = req.xpath("//a[@class='tippable' and starts-with(text(),'"+letter+"')]/@id")
+	elif letter == '#':
+		title = req.xpath("//a[@class='tippable' and starts-with(text(),'0') or starts-with(text(),'1') or starts-with(text(),'2') or starts-with(text(),'3') or starts-with(text(),'4') or starts-with(text(),'5') or starts-with(text(),'6') or starts-with(text(),'7') or starts-with(text(),'8') or starts-with(text(),'9')]/text()")
+		fileId = req.xpath("//a[@class='tippable' and starts-with(text(),'0') or starts-with(text(),'1') or starts-with(text(),'2') or starts-with(text(),'3') or starts-with(text(),'4') or starts-with(text(),'5') or starts-with(text(),'6') or starts-with(text(),'7') or starts-with(text(),'8') or starts-with(text(),'9')]/@id")
 
-	for i in range(len(fileId)):
-		# .decode() removes any incompatible characters
+	page=int(page)
+	filesForPage = range(len(fileId))[ (page-1)*PAGESIZE : page*PAGESIZE ]
+
+	for i in filesForPage:
 		thisTitle = title[i].decode('utf-8','ignore')
-		thisfileId = fileId[i]
-		if letter == None or thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
-			oc.add(DirectoryObject(
-				key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
-				thumb = THUMB % thisfileId,
-				title = thisTitle
-			))
+		thisFileId = fileId[i]
+		oc.add(DirectoryObject(
+			key=Callback(VideoDetail, title=thisTitle, fileId=thisFileId, tv=0),
+			thumb = THUMB % thisFileId,
+			title = thisTitle
+		))
+	if page > 1:
+		oc.add(DirectoryObject(key=Callback(Movies, url=url, letter=letter, page=page-1), title="Previous Page", thumb=R(ICON_PREV)))
+	if page*PAGESIZE < len(fileId):
+		oc.add(DirectoryObject(key=Callback(Movies, url=url, letter=letter, page=page+1), title="Next Page", thumb=R(ICON_NEXT)))
 	return oc
 
 # ####################################################################################################
@@ -137,7 +153,7 @@ def SearchMovies(query):
 
 # ####################################################################################################
 @route(PREFIX + '/tv')
-def TV(url=None, title='Series', showSearch=True, letter=None):
+def TV(url=None, title='Series', showSearch=True, letter=None, page=1):
 	oc = ObjectContainer(title1=title)
 	
 	if showSearch:
@@ -155,20 +171,36 @@ def TV(url=None, title='Series', showSearch=True, letter=None):
 			oc.add(DirectoryObject(key=Callback(TV, url=TVSHOWSALPHA, letter=i), title=i))
 		return oc
 
-	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = 300,headers = Header(referer=MAIN)).content)
-	title = req.xpath('//a[@style=\'color:#fff\']/text()') if showSearch else req.xpath('//a[@style=\'text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;\']/text()')
-	showId = req.xpath('//a[@style=\'color:#fff\']/@href') if showSearch else req.xpath('//a[@style=\'text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;\']/@href')
+	req = HTML.ElementFromString(HTTP.Request(url,cacheTime = CACHETIME,headers = Header(referer=MAIN)).content)
 
-	for i in range(len(showId)):
-		# .decode() removes any incompatible characters
+	if not showSearch:
+		title = req.xpath("//a[@style='text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;']/text()")
+		fileId = req.xpath("//a[@style='text-decoration:underline;color:#ffff00;font-family: verdana,geneva,sans-serif;']/@href")
+	elif not letter:
+		title = req.xpath("//a[@style='color:#fff']/text()")
+		fileId = req.xpath("//a[@style='color:#fff']/@href")
+	elif letter != '#':
+		title = req.xpath("//a[@style='color:#fff' and starts-with(text(),'"+letter+"')]/text()")
+		fileId = req.xpath("//a[@style='color:#fff' and starts-with(text(),'"+letter+"')]/@href")
+	elif letter == '#':
+		title = req.xpath("//a[@style='color:#fff' and starts-with(text(),'0') or starts-with(text(),'1') or starts-with(text(),'2') or starts-with(text(),'3') or starts-with(text(),'4') or starts-with(text(),'5') or starts-with(text(),'6') or starts-with(text(),'7') or starts-with(text(),'8') or starts-with(text(),'9')]/text()")
+		fileId = req.xpath("//a[@style='color:#fff' and starts-with(text(),'0') or starts-with(text(),'1') or starts-with(text(),'2') or starts-with(text(),'3') or starts-with(text(),'4') or starts-with(text(),'5') or starts-with(text(),'6') or starts-with(text(),'7') or starts-with(text(),'8') or starts-with(text(),'9')]/@href")
+
+	page=int(page)
+	filesForPage = range(len(fileId))[ (page-1)*PAGESIZE : page*PAGESIZE ]
+
+	for i in filesForPage:
 		thisTitle = title[i].decode('utf-8','ignore')
-		thisshowId = showId[i].split('?')[1]
-		if letter == None or thisTitle[:1].upper() == letter or (letter == '#' and thisTitle[:1].upper() not in map(chr, range(65, 91))):
-			oc.add(DirectoryObject(
-				key=Callback(TVSeries, title=thisTitle, showId=thisshowId),
-				thumb = THUMB % ('sh'+thisshowId),
-				title = thisTitle
-			))
+		thisFileId = fileId[i].split('?')[1]
+		oc.add(DirectoryObject(
+			key=Callback(TVSeries, title=thisTitle, showId=thisFileId),
+			thumb = THUMB % ('sh'+thisFileId),
+			title = thisTitle
+		))
+	if page > 1:
+		oc.add(DirectoryObject(key=Callback(TV, url=url, letter=letter, page=page-1), title="Previous Page", thumb=R(ICON_PREV)))
+	if page*PAGESIZE < len(fileId):
+		oc.add(DirectoryObject(key=Callback(TV, url=url, letter=letter, page=page+1), title="Next Page", thumb=R(ICON_NEXT)))
 	return oc
 
 # ####################################################################################################
@@ -178,7 +210,6 @@ def SearchTV(query):
 # ####################################################################################################
 @route(PREFIX + '/kids')
 def KidsZone():
-
 	oc = ObjectContainer(title1='Kids Zone')
 	oc.add(DirectoryObject(key=Callback(KidsZoneMovies), title="Movies"))
 	oc.add(DirectoryObject(key=Callback(KidsZoneTV), title="TV"))
@@ -186,65 +217,81 @@ def KidsZone():
 
 # ####################################################################################################
 @route(PREFIX + '/kidsmovies')
-def KidsZoneMovies():
+def KidsZoneMovies(page=1):
 	oc = ObjectContainer(title1='Movies')
 
-	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 300,headers = Header(referer=MAIN)).content)
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = CACHETIME,headers = Header(referer=MAIN)).content)
 	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/text()')
 	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'/?\')]/@href')
 
-	for i in range(len(fileId)):
-		# .decode() removes any incompatible characters
+	page=int(page)
+	filesForPage = range(len(fileId))[ (page-1)*PAGESIZE : page*PAGESIZE ]
+
+	for i in filesForPage:
 		thisTitle = title[i].decode('utf-8','ignore')
-		thisfileId = fileId[i].split('?')[1]
+		thisFileId = fileId[i].split('?')[1]
 		oc.add(DirectoryObject(
-			key=Callback(VideoDetail, title=thisTitle, fileId=thisfileId, tv=0),
-			thumb = THUMB % thisfileId,
+			key=Callback(VideoDetail, title=thisTitle, fileId=thisFileId, tv=0),
+			thumb = THUMB % thisFileId,
 			title = thisTitle
 		))
+	if page > 1:
+		oc.add(DirectoryObject(key=Callback(KidsZoneMovies, page=page-1), title="Previous Page", thumb=R(ICON_PREV)))
+	if page*PAGESIZE < len(fileId):
+		oc.add(DirectoryObject(key=Callback(KidsZoneMovies, page=page+1), title="Next Page", thumb=R(ICON_NEXT)))
 	return oc
 
 # ####################################################################################################
 @route(PREFIX + '/kidstv')
-def KidsZoneTV():
+def KidsZoneTV(page=1):
 	oc = ObjectContainer(title1='TV')
-
-	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = 300,headers = Header(referer=MAIN)).content)
+	
+	req = HTML.ElementFromString(HTTP.Request(MOVIESKIDS,cacheTime = CACHETIME,headers = Header(referer=MAIN)).content)
 	title =  req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/text()')
 	fileId = req.xpath('//a[@style=\'color:#fff\' and contains(@href,\'episodes\')]/@href')
 
-	for i in range(len(fileId)):
-		# .decode() removes any incompatible characters
+	page=int(page)
+	filesForPage = range(len(fileId))[ (page-1)*PAGESIZE : page*PAGESIZE ]
+
+	for i in filesForPage:
 		thisTitle = title[i].decode('utf-8','ignore')
-		thisfileId = fileId[i].split('?')[1]
+		thisFileId = fileId[i].split('?')[1]
 		oc.add(DirectoryObject(
-			key=Callback(TVSeries, title=thisTitle, showId=thisfileId),
-			thumb = THUMB % ('sh'+thisfileId),
+			key=Callback(TVSeries, title=thisTitle, showId=thisFileId),
+			thumb = THUMB % ('sh'+thisFileId),
 			title = thisTitle
 		))
+	if page > 1:
+		oc.add(DirectoryObject(key=Callback(KidsZoneTV, page=page-1), title="Previous Page", thumb=R(ICON_PREV)))
+	if page*PAGESIZE < len(fileId):
+		oc.add(DirectoryObject(key=Callback(KidsZoneTV, page=page+1), title="Next Page", thumb=R(ICON_NEXT)))
 	return oc
 	
 # ####################################################################################################
 @route(PREFIX + '/tv/show')
-def TVSeries(title, showId):
+def TVSeries(title, showId, page=1):
 	oc = ObjectContainer(title1=title)
 	
-	req = HTML.ElementFromString(
-		HTTP.Request(TVSERIES % showId, cacheTime = 300, headers = Header(referer=MAIN)).content
-	)
-	epTitle = req.xpath('//a[@style=\'color:#fff\']/text()')
-	epId = req.xpath('//a[@style=\'color:#fff\']/@href')
+	req = HTML.ElementFromString(HTTP.Request(TVSERIES % showId, cacheTime = CACHETIME, headers = Header(referer=MAIN)).content)
+	
+	fileList = req.xpath('//b[position() > 1]')
 
-	for episode in req.xpath('//b[position() > 1]'):
-		# .decode() removes any incompatible characters
-		epNum = episode.xpath('./text()')[0]
-		epTitle = episode.xpath('./a/text()')[0].decode('utf-8','ignore')
-		epFileId = episode.xpath('./a/@href')[0].split('?')[1].split('&')[0]
+	page=int(page)
+	filesForPage = range(len(fileList))[ (page-1)*PAGESIZE : page*PAGESIZE ]
+
+	for i in filesForPage:
+		thisNum = fileList[i].xpath('./text()')[0]
+		thisTitle = fileList[i].xpath('./a/text()')[0].decode('utf-8','ignore')
+		thisFileId = fileList[i].xpath('./a/@href')[0].split('?')[1].split('&')[0]
 		oc.add(DirectoryObject(
-			key=Callback(VideoDetail, title=epTitle, fileId=epFileId, tv=1),
-			thumb = THUMB % ('ep'+epFileId),
-			title = (epNum + epTitle)
+			key=Callback(VideoDetail, title=thisTitle, fileId=thisFileId, tv=1),
+			thumb = THUMB % ('ep'+thisFileId),
+			title = (thisNum + thisTitle)
 		))
+	if page > 1:
+		oc.add(DirectoryObject(key=Callback(TVSeries, title=title, showId=showId, page=page-1), title="Previous Page", thumb=R(ICON_PREV)))
+	if page*PAGESIZE < len(fileList):
+		oc.add(DirectoryObject(key=Callback(TVSeries, title=title, showId=showId, page=page+1), title="Next Page", thumb=R(ICON_NEXT)))
 	return oc
 
 # ######################################################################################
